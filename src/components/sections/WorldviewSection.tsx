@@ -141,7 +141,7 @@ export default function WorldviewSection() {
   return (
     <section
       ref={rootRef}
-      className="relative flex min-h-[110svh] w-full items-center overflow-hidden bg-ink-950 py-24"
+      className="relative flex min-h-[110svh] w-full items-center overflow-hidden py-24"
       id="worldview"
     >
       <div className="noise opacity-40" />

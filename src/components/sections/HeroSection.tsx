@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import ParticleBackground from "../ui/ParticleBackground";
 import { ArrowDown } from "lucide-react";
 
 const TITLE_1 = "E N D E R";
@@ -101,14 +100,11 @@ export default function HeroSection() {
   return (
     <section
       ref={rootRef}
-      className="relative flex min-h-[100svh] w-full items-end overflow-hidden bg-ink-950"
+      className="relative flex min-h-[100svh] w-full items-end overflow-hidden"
       id="hero"
     >
       <div className="absolute inset-0">
-        <ParticleBackground
-          progress={particleProgress.current.value}
-          density="high"
-        />
+        {/* 背景已由全局 ParticleBackground 提供 */}
         <div
           data-hero-overlay
           className="absolute inset-0"

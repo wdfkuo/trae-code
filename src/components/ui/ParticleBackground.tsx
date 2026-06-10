@@ -33,157 +33,168 @@ export default function ParticleBackground({
   }, [progress]);
 
   useEffect(() => {
-    // Check WebGL availability
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      if (!gl) {
-        setWebglAvailable(false);
-        return;
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    let frameId: number;
+    let scene: THREE.Scene;
+    let camera: THREE.PerspectiveCamera;
+    let points: THREE.Points;
+    let renderer: THREE.WebGLRenderer;
+    let geometry: THREE.BufferGeometry;
+    let material: THREE.PointsMaterial;
+
+    // Pre-check WebGL availability
+    const checkWebGL = (): boolean => {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        return !!gl;
+      } catch {
+        return false;
       }
-    } catch (e) {
+    };
+
+    if (!checkWebGL()) {
       setWebglAvailable(false);
       return;
     }
 
-    const mount = mountRef.current;
-    if (!mount) return;
+    const initThreeJS = () => {
+      const width = mount!.clientWidth;
+      const height = mount!.clientHeight;
 
-    const width = mount.clientWidth;
-    const height = mount.clientHeight;
+      // --- Scene ---
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x0a0a0f, 0.0018);
 
-    // --- Scene ---
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.0018);
+      // --- Camera ---
+      camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 4000);
+      camera.position.set(0, 0, 420);
+      cameraRef.current = camera;
 
-    // --- Camera ---
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 4000);
-    camera.position.set(0, 0, 420);
-    cameraRef.current = camera;
+      // --- Particles ---
+      const countByDensity = {
+        low: 1500,
+        medium: 3500,
+        high: 8000,
+      };
+      const count = countByDensity[density];
 
-    // --- Particles ---
-    const countByDensity = {
-      low: 1500,
-      medium: 3500,
-      high: 8000,
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+
+      const palette = [
+        new THREE.Color("#F5FF00"),
+        new THREE.Color("#00E5FF"),
+        new THREE.Color("#FF3EA5"),
+        new THREE.Color("#e9e9f2"),
+        new THREE.Color("#8a8a9a"),
+      ];
+
+      for (let i = 0; i < count; i++) {
+        const r = 300 + Math.random() * 1400;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+
+        positions[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) - 200;
+        positions[i * 3 + 2] = r * Math.cos(phi);
+
+        const c = palette[Math.floor(Math.random() * palette.length)];
+        colors[i * 3 + 0] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+
+        sizes[i] = 0.5 + Math.random() * 2.2;
+      }
+
+      geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+
+      // Circular sprite texture via canvas
+      const makeSprite = () => {
+        const size = 128;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d")!;
+        const grd = ctx.createRadialGradient(
+          size / 2,
+          size / 2,
+          0,
+          size / 2,
+          size / 2,
+          size / 2
+        );
+        grd.addColorStop(0, "rgba(255,255,255,1)");
+        grd.addColorStop(0.25, "rgba(255,255,255,0.65)");
+        grd.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, size, size);
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+      };
+
+      material = new THREE.PointsMaterial({
+        size: 2.2,
+        map: makeSprite(),
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+      });
+
+      points = new THREE.Points(geometry, material);
+      scene.add(points);
+      pointsRef.current = points;
+
+      // --- Renderer ---
+      renderer = new THREE.WebGLRenderer({
+        antialias: window.devicePixelRatio < 2,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x000000, 0);
+      mount!.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
     };
-    const count = countByDensity[density];
 
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
+    const startLoop = () => {
+      let lastProgress = 0;
+      const tick = () => {
+        frameId = requestAnimationFrame(tick);
+        if (!visibleRef.current) return;
 
-    const palette = [
-      new THREE.Color("#F5FF00"),
-      new THREE.Color("#00E5FF"),
-      new THREE.Color("#FF3EA5"),
-      new THREE.Color("#e9e9f2"),
-      new THREE.Color("#8a8a9a"),
-    ];
+        const t = performance.now() * 0.00008;
+        points.rotation.y = t * 0.6;
+        points.rotation.x = Math.sin(t * 0.8) * 0.1;
 
-    for (let i = 0; i < count; i++) {
-      // Sphere-ish distribution biased outward
-      const r = 300 + Math.random() * 1400;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
+        // Smooth progress-driven camera push
+        const target = progressRef.current;
+        lastProgress += (target - lastProgress) * 0.08;
+        const baseZ = 420 - lastProgress * 360;
+        camera.position.z = Math.max(30, baseZ);
+        camera.position.y = Math.sin(t * 1.5) * 8;
+        camera.lookAt(0, 0, 0);
 
-      positions[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) - 200;
-      positions[i * 3 + 2] = r * Math.cos(phi);
+        // Slight scale shimmer
+        const s = 1 + Math.sin(performance.now() * 0.0005) * 0.004;
+        points.scale.setScalar(s);
 
-      const c = palette[Math.floor(Math.random() * palette.length)];
-      colors[i * 3 + 0] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-
-      sizes[i] = 0.5 + Math.random() * 2.2;
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-
-    // Circular sprite texture via canvas
-    const makeSprite = () => {
-      const size = 128;
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d")!;
-      const grd = ctx.createRadialGradient(
-        size / 2,
-        size / 2,
-        0,
-        size / 2,
-        size / 2,
-        size / 2
-      );
-      grd.addColorStop(0, "rgba(255,255,255,1)");
-      grd.addColorStop(0.25, "rgba(255,255,255,0.65)");
-      grd.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, size, size);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.needsUpdate = true;
-      return tex;
+        renderer.render(scene, camera);
+      };
+      tick();
     };
 
-    const material = new THREE.PointsMaterial({
-      size: 2.2,
-      map: makeSprite(),
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true,
-    });
-
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-    pointsRef.current = points;
-
-    // --- Renderer ---
-    const renderer = new THREE.WebGLRenderer({
-      antialias: window.devicePixelRatio < 2,
-      alpha: true,
-      powerPreference: "high-performance",
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 0);
-    mount.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    // --- Loop ---
-    let frame = 0;
-    let lastProgress = 0;
-    const tick = () => {
-      frame = requestAnimationFrame(tick);
-      if (!visibleRef.current) return;
-
-      const t = performance.now() * 0.00008;
-      points.rotation.y = t * 0.6;
-      points.rotation.x = Math.sin(t * 0.8) * 0.1;
-
-      // Smooth progress-driven camera push
-      const target = progressRef.current;
-      lastProgress += (target - lastProgress) * 0.08;
-      const baseZ = 420 - lastProgress * 360;
-      camera.position.z = Math.max(30, baseZ);
-      camera.position.y = Math.sin(t * 1.5) * 8;
-      camera.lookAt(0, 0, 0);
-
-      // Slight scale shimmer
-      const s = 1 + Math.sin(performance.now() * 0.0005) * 0.004;
-      points.scale.setScalar(s);
-
-      renderer.render(scene, camera);
-    };
-    tick();
-
-    // --- Resize ---
     const onResize = () => {
       if (!mount) return;
       const w = mount.clientWidth;
@@ -192,25 +203,34 @@ export default function ParticleBackground({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
-    window.addEventListener("resize", onResize);
 
-    // --- Visibility ---
     const onVis = () => {
       visibleRef.current = !document.hidden;
     };
-    document.addEventListener("visibilitychange", onVis);
 
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("resize", onResize);
-      document.removeEventListener("visibilitychange", onVis);
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) {
-        mount.removeChild(renderer.domElement);
-      }
-    };
+    // Initialize
+    try {
+      initThreeJS();
+      startLoop();
+      window.addEventListener("resize", onResize);
+      document.addEventListener("visibilitychange", onVis);
+
+      return () => {
+        cancelAnimationFrame(frameId);
+        window.removeEventListener("resize", onResize);
+        document.removeEventListener("visibilitychange", onVis);
+        geometry.dispose();
+        material.dispose();
+        renderer.dispose();
+        if (mount.contains(renderer.domElement)) {
+          mount.removeChild(renderer.domElement);
+        }
+      };
+    } catch (error) {
+      console.warn("WebGL initialization failed, using CSS fallback:", error);
+      setWebglAvailable(false);
+      return;
+    }
   }, [density]);
 
   return (
@@ -222,27 +242,22 @@ export default function ParticleBackground({
       {!webglAvailable && (
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#0a0a0f_0%,_#050508_100%)]">
           {/* CSS fallback stars */}
-          {Array.from({ length: 80 }).map((_, i) => (
+          {Array.from({ length: 100 }).map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-white"
+              className="absolute rounded-full animate-pulse"
               style={{
                 width: `${Math.random() * 2 + 0.5}px`,
                 height: `${Math.random() * 2 + 0.5}px`,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 opacity: Math.random() * 0.6 + 0.2,
-                animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
-                animationDelay: `${Math.random() * 2}s`,
+                backgroundColor: ['#F5FF00', '#00E5FF', '#FF3EA5', '#ffffff'][Math.floor(Math.random() * 4)],
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${Math.random() * 2 + 2}s`,
               }}
             />
           ))}
-          <style>{`
-            @keyframes twinkle {
-              0%, 100% { opacity: 0.2; }
-              50% { opacity: 0.8; }
-            }
-          `}</style>
         </div>
       )}
     </div>
