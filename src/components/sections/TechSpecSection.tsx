@@ -84,8 +84,10 @@ export default function TechSpecSection() {
     <section
       id="techspec"
       ref={rootRef}
-      className="relative min-h-[110svh] w-full overflow-hidden bg-ink-950 py-24"
+      className="relative min-h-[110svh] w-full overflow-hidden py-24"
     >
+      {/* 渐变遮罩增强沉浸感 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-ink-950/40 via-transparent to-ink-950/40 pointer-events-none" />
       <TechGrid />
       <div className="noise opacity-30" />
 
@@ -93,7 +95,7 @@ export default function TechSpecSection() {
         <div className="grid items-start gap-12 md:grid-cols-12">
           <div className="md:col-span-5">
             <span className="label-chip" data-heading>
-              05 · architecture
+              05 · tech-spec
             </span>
             <h2
               data-heading

@@ -14,61 +14,114 @@ export default function TechGrid({ className = "" }: TechGridProps) {
         rootRef.current.querySelectorAll<HTMLElement>("[data-line]");
       gsap.fromTo(
         items,
-        { opacity: 0, scaleX: 0, scaleY: 0 },
+        { opacity: 0 },
         {
           opacity: 1,
-          scaleX: 1,
-          scaleY: 1,
-          duration: 1.2,
-          stagger: 0.02,
-          ease: "power3.out",
+          duration: 1.5,
+          stagger: 0.01,
+          ease: "power2.out",
           scrollTrigger: {
             trigger: rootRef.current,
             start: "top 80%",
           },
-          transformOrigin: "center center",
         }
       );
     });
   }, []);
 
-  const cols = 22;
-  const rows = 14;
-  const dots: { x: number; y: number; big: boolean }[] = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const big = (r + c) % 5 === 0 && (r * c) % 7 === 0;
-      dots.push({ x: c, y: r, big });
-    }
-  }
+  // 生成网格线
+  const gridLines = Array.from({ length: 20 }, (_, i) => i);
 
   return (
     <div
       ref={rootRef}
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       aria-hidden="true"
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gridTemplateRows: `repeat(${rows}, 1fr)`,
-      }}
     >
-      {dots.map((d, i) => (
-        <div
-          key={i}
-          data-line
-          className="m-auto"
-          style={{
-            width: d.big ? 4 : 2,
-            height: d.big ? 4 : 2,
-            borderRadius: 1,
-            background: d.big
-              ? "rgba(245,255,0,0.55)"
-              : "rgba(138,138,154,0.25)",
-            boxShadow: d.big ? "0 0 6px rgba(245,255,0,0.5)" : "none",
-          }}
-        />
-      ))}
+      {/* 横向网格线 */}
+      <svg className="absolute inset-0 h-full w-full opacity-20">
+        <defs>
+          <linearGradient id="gridFadeTop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0a0a0f" stopOpacity="1" />
+            <stop offset="50%" stopColor="#0a0a0f" stopOpacity="0" />
+            <stop offset="100%" stopColor="#0a0a0f" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="gridFadeBottom" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0a0a0f" stopOpacity="0" />
+            <stop offset="50%" stopColor="#0a0a0f" stopOpacity="0" />
+            <stop offset="100%" stopColor="#0a0a0f" stopOpacity="1" />
+          </linearGradient>
+        </defs>
+
+        {/* 横向线 */}
+        {gridLines.map((_, i) => (
+          <line
+            key={`h-${i}`}
+            data-line
+            x1="0"
+            y1={`${(i + 1) * 5}%`}
+            x2="100%"
+            y2={`${(i + 1) * 5}%`}
+            stroke="#2a2a3a"
+            strokeWidth="0.5"
+            strokeDasharray="4 8"
+          />
+        ))}
+
+        {/* 纵向线 */}
+        {gridLines.map((_, i) => (
+          <line
+            key={`v-${i}`}
+            data-line
+            x1={`${(i + 1) * 5}%`}
+            y1="0"
+            x2={`${(i + 1) * 5}%`}
+            y2="100%"
+            stroke="#2a2a3a"
+            strokeWidth="0.5"
+            strokeDasharray="4 8"
+          />
+        ))}
+
+        {/* 中心十字高亮 */}
+        <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#F5FF00" strokeWidth="0.5" strokeOpacity="0.15" />
+        <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#F5FF00" strokeWidth="0.5" strokeOpacity="0.15" />
+
+        {/* 渐变遮罩 */}
+        <rect x="0" y="0" width="100%" height="15%" fill="url(#gridFadeTop)" />
+        <rect x="0" y="85%" width="100%" height="15%" fill="url(#gridFadeBottom)" />
+      </svg>
+
+      {/* 动态扫描线 */}
+      <div
+        data-line
+        className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent"
+        style={{
+          animation: 'scanDown 8s linear infinite',
+        }}
+      />
+      <div
+        data-line
+        className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-neon-yellow/20 to-transparent"
+        style={{
+          animation: 'scanUp 12s linear infinite reverse',
+        }}
+      />
+
+      <style>{`
+        @keyframes scanDown {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes scanUp {
+          0% { top: 100%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 0%; opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -109,7 +109,7 @@ export default function GallerySection() {
     <section
       id="gallery"
       ref={rootRef}
-      className="relative min-h-[220svh] w-full overflow-hidden bg-ink-950 py-24"
+      className="relative min-h-[220svh] w-full overflow-hidden py-24"
     >
       <div className="noise opacity-30" />
 

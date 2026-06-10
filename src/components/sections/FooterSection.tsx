@@ -31,8 +31,10 @@ export default function FooterSection() {
     <footer
       id="end"
       ref={rootRef}
-      className="relative min-h-[70svh] w-full overflow-hidden bg-ink-950 pt-20"
+      className="relative min-h-[70svh] w-full overflow-hidden pt-20"
     >
+      {/* 渐变遮罩增强沉浸感 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink-950/60 via-transparent to-transparent pointer-events-none" />
       <div className="noise opacity-30" />
 
       {/* Big end statement */}

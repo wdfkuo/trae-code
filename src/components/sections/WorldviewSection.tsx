@@ -144,6 +144,8 @@ export default function WorldviewSection() {
       className="relative flex min-h-[110svh] w-full items-center overflow-hidden py-24"
       id="worldview"
     >
+      {/* 渐变遮罩增强沉浸感 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-ink-950/40 via-transparent to-ink-950/40 pointer-events-none" />
       <div className="noise opacity-40" />
 
       <div className="container relative z-10 grid items-center gap-12 md:grid-cols-12">

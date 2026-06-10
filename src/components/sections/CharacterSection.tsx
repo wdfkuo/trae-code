@@ -72,8 +72,10 @@ export default function CharacterSection() {
   return (
     <section
       id="characters"
-      className="relative min-h-[110svh] w-full overflow-hidden bg-ink-900 py-24"
+      className="relative min-h-[110svh] w-full overflow-hidden py-24"
     >
+      {/* 渐变遮罩增强沉浸感 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-ink-950/40 via-transparent to-ink-950/40 pointer-events-none" />
       <div className="noise opacity-30" />
       <div className="container relative z-10">
         <div className="mb-14 flex items-end justify-between">

@@ -15,8 +15,15 @@ export default function App() {
       {/* 全局固定背景 - 贯穿所有区块 */}
       <div className="fixed inset-0 z-0">
         <ParticleBackground progress={progressRef.current.value} density="high" />
-        {/* 渐变遮罩让背景与内容过渡更自然 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/30 via-transparent to-ink-950/50" />
+        {/* 径向渐变中心亮点 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(10, 10, 15, 0.2) 0%, rgba(10, 10, 15, 0.6) 60%, rgba(10, 10, 15, 0.95) 100%)',
+          }}
+        />
+        {/* 顶部到中部渐变 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/80 via-transparent to-transparent" />
       </div>
 
       {/* 内容层 */}
