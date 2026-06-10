@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 interface ParticleBackgroundProps {
@@ -13,6 +13,7 @@ interface ParticleBackgroundProps {
  * - 粒子缓慢旋转 + 随滚动推进 camera.position.z
  * - 根据屏幕大小选择粒子数量
  * - camera-z 由父组件通过 GSAP 写入 progress 控制
+ * - WebGL 不可用时降级为 CSS 星点背景
  */
 export default function ParticleBackground({
   progress = 0,
@@ -25,12 +26,26 @@ export default function ParticleBackground({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const progressRef = useRef(progress);
   const visibleRef = useRef(true);
+  const [webglAvailable, setWebglAvailable] = useState(true);
 
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
 
   useEffect(() => {
+    // Check WebGL availability
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) {
+        setWebglAvailable(false);
+        return;
+      }
+    } catch (e) {
+      setWebglAvailable(false);
+      return;
+    }
+
     const mount = mountRef.current;
     if (!mount) return;
 
@@ -203,6 +218,33 @@ export default function ParticleBackground({
       ref={mountRef}
       className={`pointer-events-none absolute inset-0 ${className}`}
       aria-hidden="true"
-    />
+    >
+      {!webglAvailable && (
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#0a0a0f_0%,_#050508_100%)]">
+          {/* CSS fallback stars */}
+          {Array.from({ length: 80 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{
+                width: `${Math.random() * 2 + 0.5}px`,
+                height: `${Math.random() * 2 + 0.5}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.6 + 0.2,
+                animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`,
+              }}
+            />
+          ))}
+          <style>{`
+            @keyframes twinkle {
+              0%, 100% { opacity: 0.2; }
+              50% { opacity: 0.8; }
+            }
+          `}</style>
+        </div>
+      )}
+    </div>
   );
 }
