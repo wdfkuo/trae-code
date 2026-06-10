@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>合并差异摘要报告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a24;
+      --text-primary: #e8e8ed;
+      --text-secondary: #9898a8;
+      --text-muted: #58586a;
+      --accent-green: #00ff88;
+      --accent-yellow: #ffcc00;
+      --accent-cyan: #00d4ff;
+      --accent-purple: #a855f7;
+      --border-color: #2a2a3a;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', 'JetBrains Mono', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 60px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-green);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .branch-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .branch-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .branch-label {
+      color: var(--text-muted);
+    }
+
+    .branch-value {
+      color: var(--accent-yellow);
+    }
+
+    .branch-value.source {
+      color: var(--accent-purple);
+    }
+
+    /* Summary */
+    .summary {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan), var(--accent-purple));
+    }
+
+    .summary-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-green);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .summary-text {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .summary-text strong {
+      color: var(--text-primary);
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table th {
+      background: var(--bg-tertiary);
+      padding: 16px 20px;
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+    }
+
+    .table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: top;
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tr:hover td {
+      background: rgba(0, 212, 255, 0.03);
+    }
+
+    .file-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent-cyan);
+      white-space: nowrap;
+    }
+
+    .file-category {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
+
+    .changes-list {
+      list-style: none;
+    }
+
+    .changes-list li {
+      position: relative;
+      padding-left: 16px;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+
+    .changes-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .changes-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+    }
+
+    /* Category colors */
+    .category-doc { color: var(--accent-purple); }
+    .category-config { color: var(--accent-yellow); }
+    .category-component { color: var(--accent-cyan); }
+    .category-style { color: var(--accent-green); }
+    .category-utils { color: #f97316; }
+
+    /* Footer */
+    .footer {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .footer-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px 16px;
+      }
+
+      .branch-info {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .summary {
+        padding: 24px 20px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px 14px;
+      }
+
+      .file-path {
+        font-size: 12px;
+        word-break: break-all;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header animate-in">
+      <div class="header-top">
+        <span class="badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="18" r="3"/>
+            <circle cx="6" cy="6" r="3"/>
+            <path d="M6 21V9a9 9 0 0 0 9 9"/>
+          </svg>
+          Merge Complete
+        </span>
+      </div>
+      <h1 class="title">合并差异摘要报告</h1>
+      <div class="branch-info">
+        <div class="branch-item">
+          <span class="branch-label">源分支:</span>
+          <span class="branch-value source">trae/solo-agent-QffSur</span>
+        </div>
+        <div class="branch-item">
+          <span class="branch-label">→</span>
+        </div>
+        <div class="branch-item">
+          <span class="branch-label">目标分支:</span>
+          <span class="branch-value">origin/main</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Summary -->
+    <section class="summary animate-in delay-1">
+      <div class="summary-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        变更概述
+      </div>
+      <p class="summary-text">
+        此次合并将一个完整的《终末地》风格游戏官网项目引入代码库，包含 <strong>粒子动画</strong>、<strong>滚动驱动动画</strong>、<strong>角色档案</strong>、<strong>技术规格展示</strong>等 6 个主要页面区块，以及配套的 PRD 和技术文档。新增 <strong>32 个文件</strong>，共 <strong>7,309 行代码</strong>。
+      </p>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats animate-in delay-2">
+      <div class="stat-card">
+        <div class="stat-value">32</div>
+        <div class="stat-label">新增文件</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">7,309</div>
+        <div class="stat-label">新增行数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">6</div>
+        <div class="stat-label">页面区块</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">UI 组件</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container animate-in delay-3">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 30%;">文件</th>
+            <th>变更</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="file-path">.gitignore</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加 Node.js、开发工具、IDE 等常规忽略规则</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">.trae/documents/PRD.md</span>
+              <span class="file-category category-doc">文档</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>新增产品需求文档，定义 Hero/世界观/角色/影像/技术/Footer 六大功能模块</li>
+                <li>规范设计风格（深空黑主色、荧光黄/霓虹青强调色）</li>
+                <li>定义响应式策略（桌面/平板/移动端分级降级）</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">.trae/documents/TECHNICAL.md</span>
+              <span class="file-category category-doc">文档</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>新增技术架构文档，说明 React + Vite + TypeScript 技术栈</li>
+                <li>定义 GSAP ScrollTrigger + Lenis 动画时间线规范</li>
+                <li>列出文件结构和性能预算指标</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">README.md</span>
+              <span class="file-category category-doc">文档</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加 React + TypeScript + Vite 项目说明文档</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">eslint.config.js</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>配置 ESLint 9.x 扁平化配置规则</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">index.html</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建 Vite 入口 HTML，引入字体资源</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">package.json</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加 gsap、@studio-freight/lenis、three.js、tailwindcss 等核心依赖</li>
+                <li>配置 dev/build/lint/check 脚本</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">package-lock.json</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>锁定依赖版本（4458 行）</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">postcss.config.js</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>配置 PostCSS + Autoprefixer</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">public/favicon.svg</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加站点 favicon 图标</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/App.tsx</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建根组件，集成所有页面区块</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/HeroSection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现 Hero 区域，含 Three.js 粒子背景</li>
+                <li>标题逐字卷帘入场动画</li>
+                <li>滚动驱动镜头推进效果</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/CharacterSection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现干员档案区块，含 ALYA/KENSEI/VYRA 三个角色卡片</li>
+                <li>角色剪影 SVG + 鼠标交互点亮效果</li>
+                <li>六边形能力雷达图展示</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/FooterSection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现 Footer 区域，含 Logo/社交图标/版权信息</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/GallerySection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现影像回廊区块，垂直滚动映射水平位移画廊</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/WorldviewSection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现世界观信号解码区块，含雷达扫描动画和点阵汇聚效果</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/sections/TechSpecSection.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>实现技术系统架构区块，含动态网格背景和参数卡片</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/ui/HexRadar.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建六边形能力雷达图 SVG 组件</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/ui/ParticleBackground.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建 Three.js 粒子背景组件，支持响应式粒子数量</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/ui/RadarScan.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建雷达扫描 SVG 动画组件</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/components/ui/TechGrid.tsx</span>
+              <span class="file-category category-component">组件</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建技术网格背景组件</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/hooks/useTheme.ts</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建主题切换 Hook</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/index.css</span>
+              <span class="file-category category-style">样式</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>定义 Tailwind 基础样式、CSS 变量（颜色/字体/动效）</li>
+                <li>添加 char-mask/neon-text/noise 等特效样式</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/lib/utils.ts</span>
+              <span class="file-category category-utils">工具</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加 clsx + tailwind-merge 工具函数</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/main.tsx</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建入口文件，集成 Lenis 平滑滚动和 GSAP 注册</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/pages/Home.tsx</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>创建首页容器组件</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">src/vite-env.d.ts</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>添加 Vite 环境类型声明</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">tailwind.config.js</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>配置 Tailwind 内容路径、自定义颜色（ink/neon）、字体族</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">tsconfig.json</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>配置 TypeScript 路径别名和 JSX 设置</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="file-path">vite.config.ts</span>
+              <span class="file-category category-config">配置</span>
+            </td>
+            <td>
+              <ul class="changes-list">
+                <li>配置 Vite 插件（React、TS 路径别名）</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p class="footer-time">报告生成时间: <span id="timestamp"></span></p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('timestamp').textContent = new Date().toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  </script>
+</body>
+</html>
