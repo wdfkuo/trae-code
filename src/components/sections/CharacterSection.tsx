@@ -1,0 +1,290 @@
+import { useState } from "react";
+import HexRadar from "../ui/HexRadar";
+
+interface Character {
+  id: string;
+  code: string;
+  name: string;
+  role: string;
+  accent: string;
+  short: string;
+  stats: { label: string; value: number }[];
+}
+
+const CHARACTERS: Character[] = [
+  {
+    id: "a1",
+    code: "AX-01",
+    name: "ALYA",
+    role: "先锋 / 信号员",
+    accent: "#F5FF00",
+    short:
+      "前哨干员，负责在不稳定扇区维持通讯链路。以电流形态的能量刃作为副武器。",
+    stats: [
+      { label: "攻击", value: 0.72 },
+      { label: "生存", value: 0.55 },
+      { label: "机动", value: 0.9 },
+      { label: "控制", value: 0.45 },
+      { label: "辅助", value: 0.6 },
+      { label: "爆发", value: 0.78 },
+    ],
+  },
+  {
+    id: "k2",
+    code: "KN-04",
+    name: "KENSEI",
+    role: "近卫 / 执行者",
+    accent: "#00E5FF",
+    short:
+      "近战架构，以重磁合金刀刃切割高硬度装甲。冷静、沉默、以行动代替语言。",
+    stats: [
+      { label: "攻击", value: 0.9 },
+      { label: "生存", value: 0.78 },
+      { label: "机动", value: 0.65 },
+      { label: "控制", value: 0.5 },
+      { label: "辅助", value: 0.3 },
+      { label: "爆发", value: 0.88 },
+    ],
+  },
+  {
+    id: "v3",
+    code: "VY-09",
+    name: "VYRA",
+    role: "术师 / 观测者",
+    accent: "#FF3EA5",
+    short:
+      "远程能量投射、粒子阵列观测。以视觉流处理为基础，能够预判 2.4 秒后的目标路径。",
+    stats: [
+      { label: "攻击", value: 0.82 },
+      { label: "生存", value: 0.4 },
+      { label: "机动", value: 0.55 },
+      { label: "控制", value: 0.85 },
+      { label: "辅助", value: 0.65 },
+      { label: "爆发", value: 0.92 },
+    ],
+  },
+];
+
+export default function CharacterSection() {
+  const [active, setActive] = useState(0);
+  const char = CHARACTERS[active];
+
+  return (
+    <section
+      id="characters"
+      className="relative min-h-[110svh] w-full overflow-hidden bg-ink-900 py-24"
+    >
+      <div className="noise opacity-30" />
+      <div className="container relative z-10">
+        <div className="mb-14 flex items-end justify-between">
+          <div>
+            <span className="label-chip">03 · operators</span>
+            <h2 className="mt-6 font-display text-[clamp(1.8rem,4.5vw,3.6rem)] font-bold leading-[1.05] text-ink-50">
+              干员档案 ·
+              <span className="text-ink-400">三位执行者 / 一条链路</span>
+            </h2>
+          </div>
+          <div className="hidden font-mono text-[10px] uppercase tracking-[0.35em] text-ink-500 md:block text-right">
+            sector-7 / clearance-lvl-2
+          </div>
+        </div>
+
+        <div className="grid gap-10 md:grid-cols-12">
+          {/* Character list / cards */}
+          <div className="md:col-span-6">
+            <div className="grid gap-5">
+              {CHARACTERS.map((c, i) => {
+                const isActive = i === active;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setActive(i)}
+                    className={`group relative overflow-hidden rounded-sm border text-left transition-all ${
+                      isActive
+                        ? "border-ink-50 bg-ink-800"
+                        : "border-ink-700/60 bg-ink-800/40 hover:border-ink-500"
+                    }`}
+                    style={{
+                      boxShadow: isActive
+                        ? `0 0 0 1px ${c.accent}44, 0 20px 60px -20px ${c.accent}44`
+                        : "none",
+                    }}
+                  >
+                    <div className="flex items-stretch">
+                      {/* Silhouette */}
+                      <div
+                        className="relative flex h-36 w-28 shrink-0 items-center justify-center md:h-44 md:w-36"
+                        style={{
+                          background: `linear-gradient(180deg, ${c.accent}18, rgba(10,10,15,0))`,
+                        }}
+                      >
+                        <svg
+                          viewBox="0 0 100 140"
+                          className="h-full w-full"
+                          aria-hidden="true"
+                        >
+                          <defs>
+                            <linearGradient
+                              id={`sil-${c.id}`}
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor={c.accent}
+                                stopOpacity={isActive ? 0.9 : 0.45}
+                              />
+                              <stop
+                                offset="100%"
+                                stopColor={c.accent}
+                                stopOpacity={isActive ? 0.1 : 0.05}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <g fill={`url(#sil-${c.id})`}>
+                            <circle cx="50" cy="28" r="14" />
+                            <path d="M28,58 Q50,46 72,58 L78,110 L66,130 L34,130 L22,110 Z" />
+                          </g>
+                          {/* Scanline */}
+                          {isActive && (
+                            <rect
+                              x="10"
+                              y="50"
+                              width="80"
+                              height="40"
+                              fill={c.accent}
+                              opacity="0.08"
+                            >
+                              <animate
+                                attributeName="y"
+                                values="20;120;20"
+                                dur="3.2s"
+                                repeatCount="indefinite"
+                              />
+                            </rect>
+                          )}
+                        </svg>
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background: isActive
+                              ? `linear-gradient(180deg, ${c.accent}14, transparent 60%)`
+                              : "transparent",
+                          }}
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 p-5">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="font-mono text-[10px] uppercase tracking-[0.35em]"
+                            style={{ color: c.accent }}
+                          >
+                            {c.code}
+                          </span>
+                          <span className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.35em]">
+                            {c.role}
+                          </span>
+                        </div>
+                        <div className="mt-3 font-display text-2xl font-bold text-ink-50 md:text-3xl">
+                          {c.name}
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-ink-400">
+                          {c.short}
+                        </p>
+                        <div className="mt-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-ink-500">
+                          <span
+                            className="inline-block h-1.5 w-1.5 rounded-full"
+                            style={{
+                              background: c.accent,
+                              boxShadow: `0 0 8px ${c.accent}`,
+                            }}
+                          />
+                          <span>
+                            {isActive ? "currently observing" : "tap to observe"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Accent bar */}
+                    <div
+                      className="absolute bottom-0 left-0 h-[2px] transition-all duration-700"
+                      style={{
+                        width: isActive ? "100%" : "0%",
+                        background: c.accent,
+                        boxShadow: `0 0 12px ${c.accent}`,
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Radar + detail */}
+          <div className="md:col-span-6">
+            <div className="relative h-full rounded-sm border border-ink-700/50 bg-ink-800/30 p-8">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div
+                    className="font-mono text-[10px] uppercase tracking-[0.35em]"
+                    style={{ color: char.accent }}
+                  >
+                    target · {char.code}
+                  </div>
+                  <div className="mt-2 font-display text-3xl font-bold text-ink-50 md:text-5xl">
+                    {char.name}
+                  </div>
+                </div>
+                <div className="text-right font-mono text-[10px] uppercase tracking-[0.35em] text-ink-500">
+                  <div>clearance</div>
+                  <div className="text-neon-yellow">2 / 5</div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex items-center justify-center">
+                <HexRadar stats={char.stats} accent={char.accent} size={320} />
+              </div>
+
+              {/* Stats bar */}
+              <div className="mt-6 grid grid-cols-2 gap-x-8 gap-y-3 font-mono text-[11px] uppercase tracking-[0.3em]">
+                {char.stats.map((s, i) => (
+                  <div key={i}>
+                    <div className="flex justify-between text-ink-400">
+                      <span>{s.label}</span>
+                      <span style={{ color: char.accent }}>
+                        {Math.round(s.value * 100)}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-[2px] w-full bg-ink-700/60">
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${s.value * 100}%`,
+                          background: char.accent,
+                          boxShadow: `0 0 8px ${char.accent}`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-8 text-sm leading-7 text-ink-400">{char.short}</p>
+
+              {/* Corner frame */}
+              <div className="pointer-events-none absolute -left-px -top-px h-4 w-4 border-l-2 border-t-2 border-ink-500/70" />
+              <div className="pointer-events-none absolute -right-px -top-px h-4 w-4 border-r-2 border-t-2 border-ink-500/70" />
+              <div className="pointer-events-none absolute -bottom-px -left-px h-4 w-4 border-b-2 border-l-2 border-ink-500/70" />
+              <div className="pointer-events-none absolute -bottom-px -right-px h-4 w-4 border-b-2 border-r-2 border-ink-500/70" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

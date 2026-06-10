@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink-950: #0a0a0f;
+  --color-ink-900: #0d0d14;
+  --color-ink-800: #12121a;
+  --color-ink-700: #1a1a24;
+  --color-ink-600: #2a2a3a;
+  --color-ink-400: #8a8a9a;
+  --color-neon-yellow: #f5ff00;
+  --color-neon-cyan: #00e5ff;
+  --color-neon-pink: #ff3ea5;
+
+  color-scheme: dark;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  background-color: var(--color-ink-950);
+  color: #e9e9f2;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+::selection {
+  background: var(--color-neon-yellow);
+  color: var(--color-ink-950);
+}
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-ink-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-600);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-yellow);
+}
+
+/* Hero title reveal masks */
+.char-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 0.95;
+}
+
+.char-mask > span {
+  display: inline-block;
+  transform: translateY(120%);
+  will-change: transform;
+}
+
+/* Shared utility: neon text */
+.neon-text {
+  color: var(--color-neon-yellow);
+  text-shadow: 0 0 12px rgba(245, 255, 0, 0.55),
+    0 0 32px rgba(245, 255, 0, 0.25);
+}
+
+.neon-text-cyan {
+  color: var(--color-neon-cyan);
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.55),
+    0 0 32px rgba(0, 229, 255, 0.25);
+}
+
+/* Section label chip */
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(245, 255, 0, 0.3);
+  border-radius: 999px;
+  color: var(--color-neon-yellow);
+  font-size: 0.72rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Hex radar grid lines */
+.hex-line {
+  stroke: rgba(245, 255, 0, 0.15);
+  stroke-width: 1;
+}
+
+/* Character silhouette reveal gradient */
+.silhouette {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 255, 0, 0.08),
+    rgba(0, 229, 255, 0.08) 50%,
+    rgba(255, 62, 165, 0.08)
+  );
+}
+
+/* Noise overlay helper */
+.noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px
+  );
+  background-size: 3px 3px;
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+
+/* 3D flip card */
+.flip-card {
+  perspective: 1200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
