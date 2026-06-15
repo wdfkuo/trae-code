@@ -3,29 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手机对比 - Versus</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>手机对比 - 产品比较平台</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <header class="header">
         <div class="container">
             <div class="logo">
-                <h1>VS</h1>
+                <h1>📱 手机对比</h1>
             </div>
             <nav class="nav">
                 <ul>
-                    <li><a href="#phones">手机</a></li>
-                    <li><a href="#laptops">笔记本</a></li>
-                    <li><a href="#tablets">平板</a></li>
-                    <li><a href="#cameras">相机</a></li>
+                    <li><a href="#compare">对比</a></li>
+                    <li><a href="#popular">热门</a></li>
+                    <li><a href="#about">关于</a></li>
                 </ul>
             </nav>
-            <div class="language-switch">
-                <select id="language">
-                    <option value="zh">中文</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
         </div>
     </header>
 
@@ -33,16 +26,16 @@
         <section class="hero">
             <div class="container">
                 <h2>比较手机，做出明智选择</h2>
-                <p>选择两款或更多手机进行详细对比 - 实时联网搜索</p>
+                <p>选择两款手机进行详细对比 - 支持联网搜索</p>
                 <div class="hero-info" id="data-source">数据源: 本地数据</div>
             </div>
         </section>
 
-        <section class="compare-section">
+        <section class="compare-section" id="compare">
             <div class="container">
                 <div class="search-area">
                     <div class="search-box">
-                        <input type="text" id="search1" placeholder="搜索手机型号（支持联网搜索）...">
+                        <input type="text" id="search1" placeholder="输入品牌或型号搜索（如：iPhone、华为、小米）...">
                         <div class="search-status" id="search-status"></div>
                     </div>
                     <div class="suggestions" id="suggestions1"></div>
@@ -52,33 +45,33 @@
                     <div class="phone-card" id="phone1">
                         <div class="phone-header">
                             <span class="phone-number">1</span>
-                            <button class="remove-btn">×</button>
+                            <button class="remove-btn" onclick="removePhone(0)">×</button>
                         </div>
                         <div class="phone-image">
                             <img src="https://picsum.photos/200/300" alt="手机图片">
                         </div>
                         <div class="phone-info">
                             <h3>选择手机</h3>
-                            <p>点击上方搜索框添加手机</p>
+                            <p>在上方搜索框搜索并点击添加</p>
                         </div>
                     </div>
                     <div class="phone-card" id="phone2">
                         <div class="phone-header">
                             <span class="phone-number">2</span>
-                            <button class="remove-btn">×</button>
+                            <button class="remove-btn" onclick="removePhone(1)">×</button>
                         </div>
                         <div class="phone-image">
                             <img src="https://picsum.photos/200/300" alt="手机图片">
                         </div>
                         <div class="phone-info">
                             <h3>选择手机</h3>
-                            <p>点击上方搜索框添加手机</p>
+                            <p>在上方搜索框搜索并点击添加</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="compare-results" id="compare-results">
-                    <h3>对比结果</h3>
+                    <h3>📊 参数对比</h3>
                     <table class="compare-table">
                         <thead>
                             <tr>
@@ -88,110 +81,54 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>品牌</td>
-                                <td id="brand1">-</td>
-                                <td id="brand2">-</td>
-                            </tr>
-                            <tr>
-                                <td>型号</td>
-                                <td id="model1">-</td>
-                                <td id="model2">-</td>
-                            </tr>
-                            <tr>
-                                <td>发布日期</td>
-                                <td id="releaseDate1">-</td>
-                                <td id="releaseDate2">-</td>
-                            </tr>
-                            <tr>
-                                <td>屏幕尺寸</td>
-                                <td id="screenSize1">-</td>
-                                <td id="screenSize2">-</td>
-                            </tr>
-                            <tr>
-                                <td>分辨率</td>
-                                <td id="resolution1">-</td>
-                                <td id="resolution2">-</td>
-                            </tr>
-                            <tr>
-                                <td>处理器</td>
-                                <td id="processor1">-</td>
-                                <td id="processor2">-</td>
-                            </tr>
-                            <tr>
-                                <td>RAM</td>
-                                <td id="ram1">-</td>
-                                <td id="ram2">-</td>
-                            </tr>
-                            <tr>
-                                <td>存储</td>
-                                <td id="storage1">-</td>
-                                <td id="storage2">-</td>
-                            </tr>
-                            <tr>
-                                <td>主摄像头</td>
-                                <td id="camera1">-</td>
-                                <td id="camera2">-</td>
-                            </tr>
-                            <tr>
-                                <td>电池容量</td>
-                                <td id="battery1">-</td>
-                                <td id="battery2">-</td>
-                            </tr>
-                            <tr>
-                                <td>操作系统</td>
-                                <td id="os1">-</td>
-                                <td id="os2">-</td>
-                            </tr>
-                            <tr>
-                                <td>价格</td>
-                                <td id="price1">-</td>
-                                <td id="price2">-</td>
-                            </tr>
+                            <tr><td>品牌</td><td id="brand1">-</td><td id="brand2">-</td></tr>
+                            <tr><td>型号</td><td id="model1">-</td><td id="model2">-</td></tr>
+                            <tr><td>发布日期</td><td id="releaseDate1">-</td><td id="releaseDate2">-</td></tr>
+                            <tr><td>屏幕尺寸</td><td id="screenSize1">-</td><td id="screenSize2">-</td></tr>
+                            <tr><td>分辨率</td><td id="resolution1">-</td><td id="resolution2">-</td></tr>
+                            <tr><td>处理器</td><td id="processor1">-</td><td id="processor2">-</td></tr>
+                            <tr><td>RAM</td><td id="ram1">-</td><td id="ram2">-</td></tr>
+                            <tr><td>存储</td><td id="storage1">-</td><td id="storage2">-</td></tr>
+                            <tr><td>主摄像头</td><td id="camera1">-</td><td id="camera2">-</td></tr>
+                            <tr><td>电池容量</td><td id="battery1">-</td><td id="battery2">-</td></tr>
+                            <tr><td>操作系统</td><td id="os1">-</td><td id="os2">-</td></tr>
+                            <tr><td>价格</td><td id="price1">-</td><td id="price2">-</td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="rating-section">
-                    <h3>综合评分</h3>
+                    <h3>⭐ 综合评分</h3>
                     <div class="ratings">
                         <div class="rating-card" id="rating1">
-                            <div class="score-circle">
-                                <span class="score">0</span>
-                            </div>
-                            <p>综合评分</p>
+                            <div class="score-circle"><span class="score">0</span></div>
+                            <p id="rating-name-1">未选择</p>
                         </div>
                         <div class="rating-card" id="rating2">
-                            <div class="score-circle">
-                                <span class="score">0</span>
-                            </div>
-                            <p>综合评分</p>
+                            <div class="score-circle"><span class="score">0</span></div>
+                            <p id="rating-name-2">未选择</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="popular-phones">
+        <section class="popular-phones" id="popular">
             <div class="container">
-                <h3>热门手机</h3>
+                <h3>🔥 热门手机（点击添加到对比）</h3>
                 <div class="phones-grid" id="popular-phones-grid">
+                    <div class="loading">正在加载...</div>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="footer">
+    <footer class="footer" id="about">
         <div class="container">
-            <p>&copy; 2026 Versus. 保留所有权利。</p>
-            <div class="footer-links">
-                <a href="#">关于我们</a>
-                <a href="#">隐私政策</a>
-                <a href="#">使用条款</a>
-            </div>
+            <p>© 2026 手机对比平台 | 数据来源：本地数据库 + Wikipedia API</p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="/script.js"></script>
 </body>
 </html>
